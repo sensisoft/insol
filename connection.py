@@ -16,7 +16,7 @@ from urllib2 import urlopen, URLError
 
 try:
     from django.utils.simplejson import loads as decode
-except ImportError
+except ImportError:
     from cjson import decode
 
 
