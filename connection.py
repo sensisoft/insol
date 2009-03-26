@@ -15,10 +15,9 @@ import exceptions
 from urllib2 import urlopen, URLError  
 
 try:
-    from django.utils.simplejson import loads as decode
+    from simplejson import loads as decode
 except ImportError:
-    from cjson import decode
-
+    raise ImportError, 'insol depends on simplejson module but it was not found'
 
 
 def _get_solr_select_url():
