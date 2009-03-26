@@ -10,7 +10,7 @@ Created by michal.domanski on 2009-02-24.
 
 
 from datastructures import CleverDict, py_to_solr
-import app_settings
+import config
 import urllib
 
 
@@ -116,7 +116,7 @@ class Query(dict):
             return 
             
         # for default faceting parameters, not used, but API can do that
-        facet_params = hasattr(app_settings, 'SEARCH_FACET_PARAMS') and app_settings.SEARCH_FACET_PARAMS
+        facet_params = hasattr(config, 'SEARCH_FACET_PARAMS') and config.SEARCH_FACET_PARAMS
         
 
         for key, value in params:

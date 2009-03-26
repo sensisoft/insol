@@ -9,7 +9,7 @@ A simple and elegant, yet powerful API for usage with Solr Search Engine
 Created by michal.domanski on 2009-02-24.
 """
 
-from app_settings import SOLR_ADDRESS, SOLR_PORT, SOLR_SELECT_PATH
+from config import SOLR_ADDRESS, SOLR_PORT, SOLR_SELECT_PATH
 from results import SelectResponse
 import exceptions
 from urllib2 import urlopen, URLError  
