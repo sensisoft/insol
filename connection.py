@@ -9,7 +9,7 @@ A simple and elegant, yet powerful API for usage with Solr Search Engine
 Created by michal.domanski on 2009-02-24.
 """
 
-from config import SOLR_ADDRESS, SOLR_PORT, SOLR_SELECT_PATH
+import config
 from results import SelectResponse
 import exceptions
 from urllib2 import urlopen, URLError  
@@ -20,11 +20,16 @@ except ImportError:
     raise ImportError, 'insol depends on simplejson module but it was not found'
 
 
+def reload_config():
+    import config as new_config
+    global config
+    config = new_config
+
 def _get_solr_select_url():
     """
     return solr url based on config in app_settings
     """
-    return 'http://%s:%s/solr/%s/' % (SOLR_ADDRESS, SOLR_PORT, SOLR_SELECT_PATH)
+    return 'http://%s:%s/solr/%s/' % (config.SOLR_ADDRESS, config.SOLR_PORT, config.SOLR_SELECT_PATH)
 
 def _send_query(query, **kwargs):
     """
