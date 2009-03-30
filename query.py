@@ -142,17 +142,19 @@ class Query(dict):
         
         """
         params = []
+        list_connector = ' AND '
+        query_connector = ' AND '
         q = False
         for key, value in self.items():
             if not value:
                 continue
             if key == 'q':
-                params.append( ('q', ' AND '.join(self.q)), )
+                params.append( ('q', query_connector.join(self.q)), )
                 q = True
             elif key == 'sort':
-                params.append( ('sort', ' '.join(value)), )
+                params.append( ('sort', ','.join(value)), )
             elif isinstance(value, list):
-                params.append( (key, ', '.join([x for x in value])), )
+                params.append( (key, list_connector.join([x for x in value])), )
             else:
                 params.append( (key, value), )
 

@@ -29,11 +29,13 @@ def get_configs():
     return CONFIGS
     
 def load_config(config_name):
+    import connection
     global SOLR_PORT, SOLR_ADDRESS
     try:
         config = CONFIGS[config_name]
         SOLR_PORT = config['port']
         SOLR_ADDRESS = config['host']
+        connection.reload_config()
     except KeyError:
         raise exceptions.SolrConfigError, 'no such config'
 
