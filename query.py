@@ -12,9 +12,9 @@ Created by michal.domanski on 2009-02-24.
 from datastructures import CleverDict, py_to_solr
 import config
 import urllib
+import copy
 
-
-class Facet(CleverDict):
+class SpecialTypeField(CleverDict):
     """
     
     class for handling faceting in pythonic way, yet with a somehow shameful biterness of java
@@ -35,7 +35,8 @@ class Facet(CleverDict):
         """
         params = self.as_list()
         return urllib.urlencode(params)
-        
+
+
 class Query(dict):
     """
     Every request to solr should be handled with Query type object whenever possible
@@ -63,16 +64,18 @@ class Query(dict):
     >>> import connection
     >>> connection.search(q)
     """
-
+    list_connector = ' AND '
+    
     def __init__(self, *args, **kwargs):
-        self.q = []
-        self.sort = []
-        self.fq = []
+        self.q = {}
+        self.sort = {}
+        self.fq = {}
         self.fl = []
         self.start = 0
         self.rows = 20
         self.clean(*args, **kwargs)
         
+    
 
     #So we can do url.url
     def __getattr__(self, name):
@@ -86,13 +89,21 @@ class Query(dict):
         for key, value in  super(Query, self).items():
             if isinstance(value, CleverDict):
                 temp_list.extend(value.items())
-            elif isinstance(value, list):
+            elif isinstance(value, (list, dict)):
                 temp_list.append((key,value))
             else:
                 temp_list.append(('%s' % key, py_to_solr(value)))
         return temp_list
 
-
+        
+    def _copy(self):
+        return copy.deepcopy(self)
+            
+    def filter(self, **kwargs):
+        copied = self._copy()
+        copied.fq.update(kwargs)
+        return copied
+        
     def as_list(self):
         return [(key, value) for key, value in self.items()]
 
@@ -110,8 +121,8 @@ class Query(dict):
             params = (isinstance(first_arg, dict) and list(first_arg.items())) or first_arg
         params.extend(kwargs.items())
         
-        self.facet = Facet(dict(), instance='facet')
-        
+        self.facet = SpecialTypeField(dict(), instance='facet')
+        self.stats = SpecialTypeField(dict(), instance='stats')
         if not params:
             return 
             
@@ -142,29 +153,28 @@ class Query(dict):
         
         """
         params = []
-        list_connector = ' AND '
-        query_connector = ' AND '
+
         q = False
         for key, value in self.items():
             if not value:
                 continue
-            if key == 'q':
-                params.append( ('q', query_connector.join(self.q)), )
-                q = True
+            if isinstance(value, dict):
+                params.append((key, self.list_connector.join(['%s:%s' % elem for elem in value.iteritems()])))
+            elif isinstance(value, list):
+                params.append( (key, self.list_connector.join(['%s' % x for x in value])), )
             elif key == 'sort':
                 params.append( ('sort', ','.join(value)), )
-            elif isinstance(value, list):
-                params.append( (key, list_connector.join([x for x in value])), )
             else:
                 params.append( (key, value), )
-
-        if not q:
-            return ''
 
         query = urllib.urlencode(params)
 
         if hasattr(self, 'facet') and self.facet:
             query = '%s&%s' % (query, 'facet=true')
+
+        if hasattr(self, 'stats') and self.stats:
+            query = '%s&%s' % (query, 'stats=true')
+
             
         return query
 

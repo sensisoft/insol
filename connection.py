@@ -94,16 +94,41 @@ def search(query, **kwargs):
     response = handlers['build_response'](data)
     return response
 
+                        
+def _update(data):
+    connection = httplib.HTTPConnection(config.SOLR_ADDRESS, config.SOLR_PORT)
+    connection.request('POST', _get_solr_update_url(), data, headers={'Content-type': 'text/xml'})
+    return connection.getresponse()        
             
+            
+def commit(wait_flush = False, wait_searcher = False):
+    """
+        commit changes
+    """
+    wait_flush_cmd = 'waitFlush="false"'
+    wait_searcher_cmd = 'waitSearcher="false"'
+    if  wait_flush:
+        wait_flush_cmd = 'waitFlush="true"'
+    if wait_searcher:
+        wait_searcher_cmd = 'waitSearcher="true"'
+    cmd = '<commit %s %s />' % (wait_flush_cmd, wait_searcher_cmd)
+    return _update(cmd)
 
+def optimize(wait_flush = False):
+    """
+        optimize index
+    """
+    wait_flush_cmd = 'waitFlush="false"'
+    if  wait_flush:
+        wait_flush_cmd = 'waitFlush="true"'
+    cmd = '<optimize %s />' % (wait_flush_cmd,)
+    return _update(cmd)          
             
             
-            
-            
-            
-            
-            
-            
+def delete(**kwargs):
+    if 'id' in kwargs:
+        xml = '<delete><id>%s</id></delete>' % kwargs['id']
+    return _update(xml)        
             
             
             
