@@ -8,7 +8,16 @@ this is as common as it can be
 
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, strptime
+
+try:
+    import cElementTree as ElementTree
+except ImportError:
+    try:
+        # for python 2.5
+        from xml.etree import ElementTree
+    except ImportError:
+        from elementtree import ElementTree
 
 def py_to_solr(value):
     """
@@ -76,3 +85,60 @@ def float_to_python(self, value):
     return float(value)
 
 # API Methods ############################################################
+
+
+
+def _field_to_xml(args):
+    """
+    takes two arguments in a form of tuple \n
+    a field name and a field value         \n
+    """
+    key = args[0]
+    value = args[1]
+    field = ElementTree.Element('field', name = key)
+    field.text = py_to_solr(value)
+    return field
+
+def _iterable_to_xml(iterable):
+    """
+    converts iterable object to xml   \n
+    
+    """
+    converted = list()
+    for key, value in iterable.iteritems():
+        if hasattr(value, '__iter__'):
+            converted.extend(map(_field_to_xml, ((key, val) for val in value)))
+        else:
+            converted.append(_field_to_xml((key, value)))
+    return converted
+
+def _to_document(data):
+    """
+    convert data dict to xml 'doc' element
+    """
+    
+    document = ElementTree.Element('doc')
+    map(document.append, _iterable_to_xml(data))
+    return document
+
+
+def msg_from_iterable(elems):
+    """
+    create full valid xml message for solr (adding data)
+    """
+    message = ElementTree.Element('add')
+    map(message.append,  map(_to_document, elems))
+    return ElementTree.tostring(message)
+
+
+def solr_inf(x):
+    """
+    treat -1 in range queries as infinity
+    """
+    if x == -1:
+        return '*'
+    return x
+
+
+
+

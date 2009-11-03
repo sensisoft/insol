@@ -9,7 +9,6 @@ Created by michal.domanski on 2009-02-24.
 """
 
 
-__revision__ = '$Id: datastructures.py 30476 2009-03-02 10:35:23Z michal.domanski $'
 
 
 from datetime import date, datetime
@@ -40,7 +39,7 @@ class CleverDict(ResultDict):
 
     def __init__(self, *args, **kwargs):
         dict.__setattr__(self, '_name', kwargs.pop('instance', self.__class__.__name__.lower()))
-        self.clean(*args)
+        self._clean(*args)
         dict.__init__(self, **kwargs)
 
     def items(self):
@@ -58,7 +57,7 @@ class CleverDict(ResultDict):
     def as_list(self):
         return [(key, value) for key, value in self.items()]
 
-    def clean(self, *args):
+    def _clean(self, *args):
         """
         Expects a list of tuples like:
         [('facet.field', 'model'), (facet.limit, 10)]
@@ -84,4 +83,31 @@ class CleverDict(ResultDict):
                     self[bits[1]] = value
                     
 
+    
+class Partial(object):
+    """
+    partial1=Partial(field_name='a', field_value=1)
+    partial2=Partial(field_name='b', field_value=2)
+    OR(AND(partial1, partial2), NOT(partial2)).parsed
+    
+    """
+    def __init__(self, *args, **kwargs):
+        self._field_name = kwargs.get('field_name', None)
+        self._field_value = kwargs.get('field_value', None)
+        self._parsed_val = kwargs.get('parsed_val', None)
+
+    @property
+    def parsed(self):
+        if not self._parsed_val:
+            self._parsed_val = '%s:%s' % (self._field_name, self._field_value)
+        return self._parsed_val
+        
+def OR(*args):
+    return Partial(parsed_val='(%s)' % ' OR '.join(map(lambda elem:elem.parsed, args)))
+
+def AND(*args):
+    return Partial(parsed_val='(%s)' % ' AND '.join(map(lambda elem:elem.parsed, args)))
+        
+def NOT(partial):
+    return Partial(parsed_val='NOT %s' % partial.parsed)
     

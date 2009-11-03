@@ -4,7 +4,6 @@
 tests.py
 
 Created by mdomans on 2009-03-26.
-Copyright (c) 2009 __MyCompanyName__. All rights reserved.
 """
 
 import sys
