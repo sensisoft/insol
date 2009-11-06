@@ -139,12 +139,7 @@ class Query(dict):
         return [(key, value) for key, value in self.items()]
 
     def _clean(self, *args, **kwargs):
-        """
-        
-        
-        Expects a list of tuples like:
-        [('q', 'model'), ('sort', 'date desc'), ('facet.field', 'model')]
-        
+        """        
         """
         params = []
         if args:

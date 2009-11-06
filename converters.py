@@ -8,7 +8,7 @@ this is as common as it can be
 
 """
 
-from datetime import datetime, date, strptime
+from datetime import datetime, date
 
 try:
     import cElementTree as ElementTree
