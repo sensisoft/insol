@@ -19,7 +19,7 @@ Simple set of extensible objects for easy handling of data returned from solr
 Created by michal.domanski on 2009-02-24.
 
 """
-from common.lib.iterators import filter_even, filter_odd
+from tools import filter_even, filter_odd
 
 
 class Response:
@@ -46,7 +46,7 @@ class SelectResponse(Response):
     def facets(self):
         return self._facets
 
-    def x_get_facet_as_dict(self, field_name):
+    def get_facet_as_dict(self, field_name):
         """
         .. warning:: not properly tested yet
         
@@ -56,7 +56,7 @@ class SelectResponse(Response):
         return dict(zip( filter_odd(facet_list), filter_even(facet_list)))
         
     @property
-    def x_facet_fields_dict(self):
+    def facet_fields_dict(self):
         """
         .. warning:: watchout, this may cost you some RAM
 
@@ -67,19 +67,6 @@ class SelectResponse(Response):
         loc_get_facet_as_dict = self.x_get_facet_as_dict
         f_keys = self._facets['facet_fields'].keys()
         return dict(zip(f_keys, map(loc_get_facet_as_dict, f_keys)))
-
-        
-    def get_facet_as_dict(self, field_name):
-        """
-       Solr returns facets as list in form [key, value, key2, value2]
-       This function converts it to dict
-       """
-        d = {}
-        facet_list = self._facets['facet_fields'][field_name]
-
-        for i in range( len(facet_list)//2 ):
-                d[facet_list[2*i]] =  facet_list[2*i+1]
-        return d
 
     @property
     def stats(self):

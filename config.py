@@ -41,37 +41,10 @@ CONFIGS = {}
 SEARCH_PLUGINS = []
 
 
-
-def release_lock(lock_name):
-    global _LOCKED, _LOCK_TOKENS
-    del _LOCK_TOKENS[lock_name]
-    if not _LOCK_TOKENS.keys(): _LOCKED = False
-    
-def acquire_lock(lock_name):
-    global _LOCKED, _LOCK_TOKENS
-    if _LOCKED:
-        return False
-    _LOCK_TOKENS[lock_name]=1
-    _LOCKED = True
-    return True
-    
-    
-def atomic(func):
-    def wrapper(*args, **kwargs):
-        lock = acquire_lock(func.__name__)
-        if lock: 
-            res = func(*args, **kwargs)
-        else:
-            raise exceptions.SolrConfigError, 'config locked'
-        release_lock(func.__name__)
-        return res
-    return wrapper
-
 def get_configs():
     "return list of configs"
     return CONFIGS
     
-@atomic
 def load_config(config_name):
     """
     loads config specified by name given and reload connnection
@@ -84,17 +57,14 @@ def load_config(config_name):
     SOLR_ADDRESS = config['host']
     connection.reload_config()
 
-@atomic
 def add_to_plugins(plugin):
     global SEARCH_PLUGINS
     SEARCH_PLUGINS.append(plugin)
         
-@atomic
 def set_plugins(plugins):
     global SEARCH_PLUGINS
     SEARCH_PLUGINS = plugins
 
-@atomic
 def set_config(config_name, host, port, core=''):
     """
     adds your config to global set of configs

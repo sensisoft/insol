@@ -23,20 +23,20 @@
 
 """
 
-import exceptions
 import httplib
 import os.path
 import socket
-
-from urllib2 import urlopen, URLError
 import urlparse
 
+from urllib2 import urlopen, URLError
+
+import exceptions
 import config
 from results import SelectResponse
 from converters import msg_from_iterable
 
 try:
-    from common.lib import json
+    import simplejson
 except ImportError:
     raise ImportError, 'insol depends on simplejson module but it was not found'
     
@@ -85,7 +85,7 @@ def _handle_connection(connection, **kwargs):
     with .read method and performs decoding on it,
     extra parameter decoder for overload of default one
     """
-    decoder = kwargs.get('decoder', json.loads)
+    decoder = kwargs.get('decoder', simplejson.loads)
     return decoder(connection.read())
 
 def _build_response(data, **kwargs):

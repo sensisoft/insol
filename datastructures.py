@@ -45,6 +45,12 @@ class ResultDict(dict):
 class CleverDict(ResultDict):
     """
     Used for Facet, Query and Highlight
+    
+    based on :
+    
+    http://haystacksearch.org/
+    
+    
     """
 
     def __init__(self, *args, **kwargs):
@@ -91,116 +97,6 @@ class CleverDict(ResultDict):
                 except KeyError:
                     #Doesn't exist yet.
                     self[bits[1]] = value
-   
-  
-  
-def _list(value):
-    if isinstance(value, (list, tuple)):
-        return value
-    if isinstance(value, dict):
-        return value.values()
-    return [value]
-    
-
-class MVDict(dict):
-    """
-
-    .. warning:: 
-        REIMPLEMENTED 
-        
-        Ported from django and customized for use in this API, if you want classic MVD,
-        use django's
-    
-    
-    """
-    def __init__(self, key_to_list_mapping=()):
-        super(MVDict, self).__init__(key_to_list_mapping)
-
-    def __repr__(self):
-        return "<%s: %s>" % (self.__class__.__name__,
-                             super(MVDict, self).__repr__())
-
-    def __getitem__(self, key):
-        """
-        MODIFIED
-        
-        if you contain list, return list
-        
-        Returns the last data value for this key, or [] if it's an empty list;
-        raises KeyError if not found.
-        """
-        try:
-            value = super(MVDict, self).__getitem__(key)
-        except KeyError:
-            raise KeyError, "Key %r not found in %r" % (key, self)
-        try:
-            return value
-        except IndexError:
-            return []
-
-    def __setitem__(self, key, value):
-        """
-        MODIFIED
-        
-        nested list would create bugs
-        
-        """
-        super(MVDict, self).__setitem__(key, _list(value))
-
-    def __copy__(self):
-        return self.__class__(super(MVDict, self).items())
-
-    def __deepcopy__(self, memo=None):
-        import copy
-        if memo is None:
-            memo = {}
-        result = self.__class__()
-        memo[id(self)] = result
-        for key, value in dict.items(self):
-            dict.__setitem__(result, copy.deepcopy(key, memo),
-                             copy.deepcopy(value, memo))
-        return result
-
-    def get(self, key, default=None):
-        """
-        Returns the last data value for the passed key. If key doesn't exist
-        or value is an empty list, then default is returned.
-        """
-        try:
-            val = self[key]
-        except KeyError:
-            return default
-        if val == []:
-            return default
-        return val
-
-
-    def append_to(self, key, value):
-        """Appends an item to the internal list associated with key."""
-        self[key] = self.get(key,[]) + _list(value)
-
-    def prepend_to(self, key, value):
-        """Prepends an item to the internal list associated with key."""
-        self[key] = _list(value) + self.get(key,[])
-        
-    def copy(self):
-        """Returns a copy of this object."""
-        return self.__deepcopy__()
-
-    def update(self, *args, **kwargs):
-        """
-        update() extends rather than replaces existing key lists.
-        Also accepts keyword args.
-        """
-        if len(args) > 1:
-            raise TypeError, "update expected at most 1 arguments, got %d" % len(args)
-        if args: # we have a dict passed :)
-            other_dict = args[0]
-            for key, value in other_dict.items():
-                self[key] = self.get(key,[]).update(_list(value))
-        for key, value in kwargs.iteritems():
-            self.setlistdefault(key, []).append(value)
-
     
 class Partial(object):
     """
