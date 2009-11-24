@@ -19,8 +19,6 @@ tests.py
 Created by mdomans on 2009-03-26.
 """
 
-import sys
-import os
 import nose
 
 
@@ -36,3 +34,27 @@ def test_import_results():
     import results
 def test_import_converters():
     import converters
+def test_import_manager():
+    import manager
+def test_import_tools():
+    import tools
+
+def test_searchables():
+    from datastructures import Searchable
+    
+    class CategorySearchable(Searchable):
+        multivalued = True
+        field_name = 'category'
+        solf_field = 'category'
+        solr_query_param = 'fq'
+        
+    connection.search(Query(CategorySearchable(category_value)))
+        
+        
+        
+        
+    
+    
+    
+    
+    

@@ -14,9 +14,12 @@
 # the License.
 
 """
-Datastructures for new solr api
 
-Created by michal.domanski on 2009-02-24.
+.. module:: datastructures
+   :platform: Unix, Windows, Linux
+   :synopsis: Code for easy data managment
+.. :moduleauthor: Michal Domanski <michal.domanski@sensisoft.com>
+
 
 """
 
@@ -25,6 +28,7 @@ Created by michal.domanski on 2009-02-24.
 
 from datetime import date, datetime
 from converters import py_to_solr
+from config import DEFAULT_OPERATOR
 
 
 class ResultDict(dict):
@@ -97,31 +101,54 @@ class CleverDict(ResultDict):
                 except KeyError:
                     #Doesn't exist yet.
                     self[bits[1]] = value
-    
-class Partial(object):
-    """
-    partial1=Partial(field_name='a', field_value=1)
-    partial2=Partial(field_name='b', field_value=2)
-    OR(AND(partial1, partial2), NOT(partial2)).parsed
-    
-    """
-    def __init__(self, *args, **kwargs):
-        self._field_name = kwargs.get('field_name', None)
-        self._field_value = kwargs.get('field_value', None)
-        self._parsed_val = kwargs.get('parsed_val', None)
 
+class Searchable(object):
+    """ 
+    Field parameters are class variables, define per class
+    """
+
+    multivalued = False
+    required = False    # field required by the search app (show "what should i search for")
+    boost = False
+    field_name = None   # the application field_name, used as query parameters, may be different from the...
+    solr_query_field = None   # SOLR schema name
+    solr_index_field = None
+    solr_query_param = 'q'  #default target for solr query, either q or fq.
+                        #using fq allows better query result caching in solr, so params with commonly used values shoud go there
+                        #good candidates are: advert_type, region, category, is_active
+
+    orderable = False   # is it possible to order search results by it?
+    _parsed_search_term = None
+
+
+    def __init__(self, *searchables, **kwargs):
+        self.operator = kwargs.get('operator', DEFAULT_OPERATOR )
+        if isinstance(searchables[0], Searchable):# we are inside more complicated query
+            self._parsed_search_term = operator.join([term for term in searchable.parsed_search_term])
+        else:# we are simple creating one object
+            self.value = searchables[0]
+            assert solr_query_field is not None
+
+    # A helper method for returning a single solr term according to the fields mandatory and boost settings
+    # Can be used to join multivalue queries (right?)
     @property
-    def parsed(self):
-        if not self._parsed_val:
-            self._parsed_val = '%s:%s' % (self._field_name, self._field_value)
-        return self._parsed_val
+    def parsed_search_term(self):
+        if not self._parsed_search_term:
+            self._parsed_search_term = self.__class__.search_term(self.solr_query_field, self.value)
+        return self._parsed_search_term
         
-def OR(*args):
-    return Partial(parsed_val='(%s)' % ' OR '.join(map(lambda elem:elem.parsed, args)))
-
-def AND(*args):
-    return Partial(parsed_val='(%s)' % ' AND '.join(map(lambda elem:elem.parsed, args)))
-        
-def NOT(partial):
-    return Partial(parsed_val='NOT %s' % partial.parsed)
+    @classmethod
+    def search_term(cls, key, value):
+        """ 
+        Default search term for signle value lookup
+        """
+        temp = []
+        temp.append('(')
+        temp.append(str(key))
+        temp.append(':')
+        temp.append(py_to_solr(value))
+        if cls.boost:
+            temp.append('^%s'%str(cls.boost))
+        temp.append(')')
+        return ''.join(temp)
     

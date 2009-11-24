@@ -31,6 +31,7 @@ SOLR_CORE = ''
 SOLR_SELECT_PATH = 'select'
 SOLR_UPDATE_PATH = 'update'
 SOLR_PING_PATH = 'admin/ping'
+DEFAULT_OPERATOR = 'OR'
 
 
 CONFIGS = {}
